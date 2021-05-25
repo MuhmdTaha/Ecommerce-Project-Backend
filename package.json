@@ -1,0 +1,25 @@
+{
+  "name": "ecommerce-project-backend",
+  "version": "1.0.0",
+  "description": "Backend API for our ecommerce angular project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MuhmdTaha/Ecommerce-Project-Backend.git"
+  },
+  "keywords": [
+    "API",
+    "backend",
+    "NodeJS",
+    "Ecommerce"
+  ],
+  "author": "Our Team",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MuhmdTaha/Ecommerce-Project-Backend/issues"
+  },
+  "homepage": "https://github.com/MuhmdTaha/Ecommerce-Project-Backend#readme"
+}
