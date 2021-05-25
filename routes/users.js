@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Cart = require("../models/cart");
 const validateUser = require("../helpers/validateuser");
+const validateEmail = require("../helpers/validateemail");
 
 const multer = require("multer");
 var storage = multer.diskStorage({
@@ -85,4 +86,52 @@ router.post("/signup", async (req, res) => {
       return res.status(500).send("seving error");
     }
   });
+
+
+  //login methos
+
+router.post("/login", async (req, res) => {
+    const { error } = validateEmail(req.body.email);
+    if (error) {
+      return res.status(400).send("invalid Email");
+    }
+  
+    const { email, password } = req.body;
+    try {
+      let user = await User.findOne({
+        email,
+      });
+      if (!user) return res.statusCode(404).send("email not found");
+  
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.statusCode(400).send("password is incorrect");
+      const payload = {
+        user: {
+          id: user._id,
+          userName: user.userName,
+          isAdmin: user.isAdmin,
+        },
+      };
+      jwt.sign(
+        payload,
+        "secret",
+        {
+          expiresIn: "24h",
+        },
+        (error, token) => {
+          if (error) return res.statusCode(400).send("error in token creation");
+          return res
+            .status(200)
+            .json({
+              token,
+              user,
+            })
+            .send();
+        }
+      );
+    } catch (error) {
+      return res.status(400).send("error");
+    }
+  });
+  
   
