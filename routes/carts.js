@@ -55,3 +55,24 @@ router.delete(
     res.status(200).send(cart);
   }
 );
+
+//Checkout (Empty Cart)
+router.get("/user/:id/checkout", [CheckToken], async (req, res) => {
+  const { id } = req.params;
+  const { error } = validateObjectId(req.params.id);
+  if (error) return res.status(400).send("User id is not valid");
+
+  const user = await User.findById(id);
+  if (!user) return res.status(400).send("User is not found");
+
+  let cart = await Cart.find({ userId: id });
+  if (!cart) return res.status(400).send("User's cart is not found");
+
+  cart[0].productsList.splice(0, cart[0].productsList.length);
+
+  await cart[0].save();
+
+  res.status(200).send(cart);
+});
+
+module.exports = router;
