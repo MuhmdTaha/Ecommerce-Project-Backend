@@ -75,4 +75,50 @@ router.get("/user/:id/checkout", [CheckToken], async (req, res) => {
   res.status(200).send(cart);
 });
 
+//Add product to user's cart
+router.post("/user/:id", [CheckToken, validateCart], async (req, res) => {
+  const { error } = validateObjectId(req.params.id);
+  if (error) return res.status(400).send("User id is not valid");
+
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(400).send("User is not found");
+
+  const userCart = await Cart.findById(user.cart);
+  if (!userCart) return res.status(400).send("User's cart is not found");
+
+  const product = await Product.findById(req.body.productsList[0].productId);
+  if (!product) return res.status(400).send("Product is not found");
+
+  const indexFound = userCart.productsList.findIndex((item) => {
+    return item.productId == req.body.productsList[0].productId;
+  });
+
+  if (indexFound !== -1 && product.quantity >= 0) {
+    if (product.quantity - req.body.productsList[0].quantity >= 0) {
+      userCart.productsList[indexFound].quantity =
+        parseInt(userCart.productsList[indexFound].quantity) +
+        parseInt(req.body.productsList[0].quantity);
+      product.quantity = product.quantity - req.body.productsList[0].quantity;
+    } else {
+      return res.status(400).send("More than available quantity");
+    }
+  } else if (product.quantity > 0) {
+    if (product.quantity - req.body.productsList[0].quantity >= 0) {
+      userCart.productsList.push({
+        productId: req.body.productsList[0].productId,
+        quantity: req.body.productsList[0].quantity,
+      });
+      product.quantity = product.quantity - req.body.productsList[0].quantity;
+    } else {
+      return res.status(400).send("More than available quantity");
+    }
+  } else {
+    return res.status(400).send("More than available quantity");
+  }
+
+  await userCart.save();
+  await product.save();
+  res.status(200).send(userCart);
+});
+
 module.exports = router;
