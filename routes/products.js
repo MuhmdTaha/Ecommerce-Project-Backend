@@ -15,6 +15,29 @@ router.get("/", async (req, res) => {
 });
 
 
+//get Product
+router.get("/:id", async (req, res) => {
+    const { id } = req.params;
+    const { error } = validateObjectId(id);
+    if (error) return res.status(400).send("Invalid Product");
+    //find->filter is delelted and by id
+    const product = await Product.find({
+        $and: [
+            {
+                _id: id,
+            },
+            {
+                isDeleted: {
+                    $ne: true,
+                },
+            },
+        ],
+    });
+    if (!product) return res.status(404).send("Product not found");
+
+    res.send(product);
+});
+
 //search for product
 router.post("/search", async (req, res) => {
     const searchparams = {
