@@ -1,5 +1,7 @@
 const express = require("express");
 const Product = require("../models/product");
+const validateProduct = require("../helpers/validateproduct");
+const validateObjectId = require("../helpers/validateobjectid");
 
 const multer = require("multer");
 var storage = multer.diskStorage({
