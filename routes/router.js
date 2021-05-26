@@ -1,13 +1,12 @@
 const express = require("express");
-
-const Order = require("../models/order");
-const CheckToken = require("../middleware/auth");
-const validateObjectId = require("../helpers/validateobjectid");
-const router = express.Router();
-const Cart = require("../models/cart");
 const User = require("../models/user");
 const Product = require("../models/product");
-
+const Order = require("../models/order");
+const Cart = require("../models/cart");
+const validateOrder = require("../helpers/validateorder");
+const CheckToken = require("../midlware/auth");
+const validateObjectId = require("../helpers/validateobjectid");
+const router = express.Router();
 
 
 
@@ -80,3 +79,38 @@ router.post("/", CheckToken, async (req, res) => {
       await cart.save(); 
       return res.send(order);
     });
+
+    //update state only: accepted (decrease quantity from product) - rejected
+
+router.patch("/:id", CheckToken, async (req, res) => {
+    const id = req.params.id;
+    const { error } = validateObjectId(id);
+    if (error) {
+      return res.status(400).send("Invalid ID");
+    }
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).send("Order Not Found");
+  
+    const status = req.body.status;
+    //update
+    if (
+      (order.status === "pending" &&
+        (status === "accepted" || status === "rejected")) ||
+      status === "cancelled"
+    ) {
+      order.status = status;
+      order.products.forEach(async (element) => {
+        const product = await Product.findById(element.product);
+        if (product.quantity < element.quantity) {
+          return res.status(400).send(`run out of stock product ${element}`);
+        }
+        if (status === "rejected" || status === "cancelled") {
+          //plus qty if rejected
+          product.quantity += element.quantity;
+        }
+        await product.save();
+      });
+    }
+    order.save();
+    return res.send(order);
+  });
