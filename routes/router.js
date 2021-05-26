@@ -114,3 +114,36 @@ router.patch("/:id", CheckToken, async (req, res) => {
     order.save();
     return res.send(order);
   });
+
+  //cancel order if pending:
+router.delete("/:id", CheckToken, async (req, res) => {
+    const id = req.params.id;
+    const { error } = validateObjectId(id);
+    if (error) {
+      return res.status(400).send("Invalid ID");
+    }
+    oldOrder = await Order.findById(id);
+    if (!oldOrder) {
+      return res.status(400).send("Order not found");
+    }
+    if (oldOrder.status == "pending") {
+      const deletedOrder = await Order.findByIdAndUpdate(
+        id,
+        {
+          status: "cancelled",
+        },
+        {
+          new: true,
+        }
+      );
+      res.send(deletedOrder);
+    } else {
+      return res
+        .status(400)
+        .send(
+          "Cannot cancel order. Orders can be cancelled only if they are pending."
+        );
+    }
+  });
+  
+  module.exports = router;
